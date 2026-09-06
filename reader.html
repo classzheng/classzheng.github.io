@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Reader — @classzheng</title>
+  <meta name="description" content="Reader: load an article URL into an iframe using ?source=..." />
+
+  <style>
+    /* Reused MonoBlack styles from your homepage (kept compact) */
+    *, *::before, *::after { box-sizing: border-box; }
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;                /* important: makes viewport math predictable */
+  box-sizing: border-box;
+}
+
+    :root{
+      --bg-image: url('https://raw.githubusercontent.com/classzheng/classzheng.github.io/refs/heads/main/0_2e406cc98c73ff56159a061fa596422a_1788615870726.jpeg');
+      --bg-overlay: rgba(0,0,0,0.75);
+      --accent: #bdbdbd;
+      --muted: #8f8f8f;
+      --card-bg: rgba(0,0,0,0.35);
+    }
+
+    body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background:
+    linear-gradient(var(--bg-overlay), var(--bg-overlay)),
+    var(--bg-image) no-repeat center/cover;
+  color: #fff;
+  font-family: "SFMono-Regular","Roboto Mono", ui-monospace, monospace;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.45;
+}
+
+    
+.wrap {
+  width: 100%;
+  max-width: 900px;
+
+  /* Use exact height so inner flex children can size correctly */
+  height: calc(100vh - 56px); /* adjust 56px if you want larger/smaller page gutter */
+
+  display: flex;
+  flex-direction: column;
+  padding: 14px;             /* card padding only (body padding removed above) */
+  box-sizing: border-box;
+  background: var(--card-bg);
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+
+  overflow: hidden;          /* prevent outer scrolling; iframe scrolls internally */
+  min-height: 0;             /* CRITICAL: allow flex children to shrink */
+}
+
+/* header/footer should not flex-grow (they size to content) */
+header.reader-head,
+footer {
+  flex: 0 0 auto;
+}
+
+/* viewer area fills remaining space */
+.viewer-wrap {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;             /* CRITICAL for children to honor flex sizing */
+  position: relative;
+}
+
+/* iframe must fill its flex parent */
+iframe.viewer {
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  display: block;
+}
+
+    .brand .title { font-weight:600; font-size:1.02rem; display:block; }
+    .brand .hint { color:var(--muted); font-size:0.9rem; margin-top:4px; }
+
+    .controls{ margin-left:auto; display:flex; gap:8px; align-items:center; }
+    .controls input[type="url"]{
+      background:transparent;
+      border:1px solid rgba(255,255,255,0.06);
+      padding:8px 10px;
+      border-radius:6px;
+      color:var(--accent);
+      min-width:260px;
+      outline:none;
+    }
+    .controls button{
+      background:transparent;
+      border:1px solid rgba(255,255,255,0.08);
+      color:var(--muted);
+      padding:8px 10px;
+      border-radius:6px;
+      cursor:pointer;
+    }
+    .controls a { color:var(--muted); text-decoration:none; font-size:0.95rem; }
+
+    .placeholder{
+      flex:1 1 auto; display:flex; align-items:center; justify-content:center; color:var(--muted);
+      padding:18px; text-align:center; font-size:0.95rem;
+    }
+
+    .notice{
+      margin-top:8px;
+      padding:10px 12px;
+      background:rgba(255,255,255,0.02);
+      border-radius:6px;
+      color:var(--muted);
+      font-size:0.9rem;
+    }
+
+    header.reader-head,
+footer {
+  flex: 0 0 auto;
+  margin: 0;                 /* reset potential margins that cause overflow */
+}
+
+    @media (max-width:520px){
+      .controls input[type="url"]{ min-width:140px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap" role="main">
+    <header class="reader-head">
+
+      <div class="controls">
+        <input id="sourceInput" type="url" placeholder="https://example.com/article.html" aria-label="article url" />
+        <button id="loadBtn" type="button">Load</button>
+        <a id="openLink" href="#" target="_blank" rel="noopener noreferrer">Open in new tab</a>
+      </div>
+    </header>
+
+    <div class="viewer-wrap" id="viewerWrap">
+      <div id="placeholder" class="placeholder" role="status">
+        Enter a URL (or use ?source=...) to load an article here. 
+      </div>
+
+      <iframe id="viewer" class="viewer" title="Article viewer" style="display:none;"></iframe>
+    </div>
+
+    <footer>
+      <div>Made by @classzheng via <a href="https://www.github.com/copilot" style="color:var(--muted); text-decoration:none;">Github Copilot</a></div>
+      <div><a href="index.html" style="color:var(--muted); text-decoration:none;">Back</a></div>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      const input = document.getElementById('sourceInput');
+      const loadBtn = document.getElementById('loadBtn');
+      const viewer = document.getElementById('viewer');
+      const placeholder = document.getElementById('placeholder');
+      const openLink = document.getElementById('openLink');
+      const info = document.getElementById('info');
+
+      function isValidURL(url) {
+        try {
+          const u = new URL(url, location.href);
+          return u.protocol === 'http:' || u.protocol === 'https:';
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function setOpenHref(url) {
+        if (!url) {
+          openLink.href = '#';
+          openLink.setAttribute('aria-disabled', 'true');
+        } else {
+          openLink.href = url;
+          openLink.removeAttribute('aria-disabled');
+        }
+      }
+
+      function showPlaceholder(msg) {
+        viewer.style.display = 'none';
+        viewer.src = 'about:blank';
+        placeholder.style.display = 'flex';
+        placeholder.textContent = msg || 'Enter a URL (or use ?source=...) to load an article here.';
+        setOpenHref('');
+      }
+
+      function showViewer(url) {
+        placeholder.style.display = 'none';
+        viewer.style.display = 'block';
+        // Remove sandbox attribute to maximize compatibility with sites. If you want stronger isolation, do NOT remove sandbox.
+        viewer.removeAttribute('sandbox');
+        viewer.src = url;
+        setOpenHref(url);
+
+        // update address bar query param for convenience (no navigation)
+        try {
+          const u = new URL(location.href);
+          u.searchParams.set('source', url);
+          history.replaceState(null, '', u.toString());
+        } catch (e) { /* ignore */ }
+
+        // heuristic: if iframe doesn't render in ~1.5s, show a stronger hint
+        const t = setTimeout(() => {
+          // We can't reliably detect cross-origin iframe content; check if white/blank is likely.
+          info.textContent = 'If the embedded area stays blank the target site may disallow framing; click "Open in new tab".';
+        }, 1500);
+
+        // on load, clear the hint timer and update info
+        const onLoad = () => {
+          clearTimeout(t);
+          info.textContent = 'Loaded in iframe. If the page stays blank or errors appear, the host may block embedding; use "Open in new tab".';
+          viewer.removeEventListener('load', onLoad);
+        };
+        viewer.addEventListener('load', onLoad);
+      }
+
+      loadBtn.addEventListener('click', () => {
+        const v = input.value.trim();
+        if (!v) { showPlaceholder('Please enter a URL.'); return; }
+        if (!isValidURL(v)) { showPlaceholder('Only http:// or https:// URLs are allowed.'); return; }
+        showViewer(v);
+      });
+
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') loadBtn.click(); });
+
+      // initialize from query param
+      const params = new URLSearchParams(location.search);
+      const source = params.get('source');
+      if (source) {
+        input.value = source;
+        if (isValidURL(source)) {
+          showViewer(source);
+        } else {
+          showPlaceholder('The provided source parameter is not a valid http(s) URL.');
+        }
+      } else {
+        showPlaceholder();
+      }
+
+      // prevent openLink default when not set
+      openLink.addEventListener('click', function (e) {
+        const href = openLink.getAttribute('href');
+        if (!href || href === '#') e.preventDefault();
+      });
+
+      // expose for debugging if needed
+      window.__reader = { showViewer, showPlaceholder, isValidURL };
+    })();
+  </script>
+</body>
+</html>

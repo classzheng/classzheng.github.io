@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>@classzheng — Blog</title>
+  <meta name="description" content="Personal blog homepage." />
+
+  <style>
+    /* MonoBlack, minimal, and responsive */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; padding: 0; }
+
+    :root{
+      --bg-image: url('https://raw.githubusercontent.com/classzheng/classzheng.github.io/refs/heads/main/0_2e406cc98c73ff56159a061fa596422a_1788615870726.jpeg'); /* BG_IMAGE_URL: replace if needed */
+      --bg-overlay: rgba(0,0,0,0.75);
+      --accent: #bdbdbd;
+      --muted: #8f8f8f;
+      --card-bg: rgba(0,0,0,0.35);
+    }
+
+    body{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:100vh;
+      padding:28px;
+      overflow:hidden; /* remove page scrollbar (wrap scrolls internally) */
+      background:
+        linear-gradient(var(--bg-overlay),var(--bg-overlay)),
+        var(--bg-image) no-repeat center/cover;
+      color:#fff;
+      font-family: "SFMono-Regular","Roboto Mono", ui-monospace, monospace;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      line-height:1.45;
+      -webkit-font-feature-settings: "ss01" on;
+    }
+
+    /* Content card: scrolls internally when needed */
+    .wrap{
+      width:100%;
+      max-width:900px;
+      max-height:calc(100vh - 56px);
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+      padding:28px;
+      background: var(--card-bg);
+      border-radius:8px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+    }
+
+    /* Optional: subtle internal scrollbar (visible). To hide, set width:0 below. */
+    .wrap::-webkit-scrollbar { width:8px; height:8px; }
+    .wrap { scrollbar-width: thin; }
+
+    img { max-width:100%; height:auto; display:block; }
+
+    /* Head (avatar + name) */
+    header { display:flex; gap:18px; align-items:center; }
+    .avatar {
+      flex:0 0 96px;
+      width:96px;
+      height:96px;
+      border-radius:12px;
+      overflow:hidden;
+      background:#111;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid rgba(255,255,255,0.06);
+    }
+    .avatar img { width:100%; height:100%; object-fit:cover; display:block; }
+
+    .who h1 { margin:0; font-size:1.35rem; color:#fff; }
+    .who p { margin:0; color:var(--muted); font-size:0.95rem; }
+
+    main { margin-top:22px; }
+
+    h2#posts-heading { margin: 0 0 12px 0; font-size:1rem; color:var(--muted); }
+
+    /* Article list: each item is a card link with thumbnail on the left */
+    .posts { list-style:none; padding:0; margin:0; display:grid; gap:12px; }
+
+    .post { /* li wrapper; nothing visual here */ }
+
+    .post-link {
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      text-decoration:none;
+      color:inherit;
+      padding:12px 14px;
+      border-radius:6px;
+      background: rgba(255,255,255,0.02);
+      transition: background 120ms ease, transform 80ms ease;
+    }
+
+    .post-link:hover { background: rgba(255,255,255,0.04); transform: translateY(-1px); }
+    .post-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius:6px; }
+
+    /* Thumbnail sizing */
+    .thumbnail {
+      flex: 0 0 64px;
+      width:64px;
+      height:64px;
+      border-radius:8px;
+      overflow:hidden;
+      background:#111;
+      border:1px solid rgba(255,255,255,0.06);
+      display:block;
+    }
+    .thumbnail img { width:100%; height:100%; object-fit:cover; display:block; }
+
+    /* Content column */
+    .post-content { flex:1 1 auto; min-width:0; } /* min-width:0 prevents flex overflow with long text */
+    .title {
+      display:block;
+      font-weight:600;
+      color:#fff;
+      text-decoration:none;
+      font-size:1.02rem;
+      margin-bottom:6px;
+      white-space:normal;
+      word-wrap:break-word;
+      line-height:1.2;
+    }
+    .meta { color:var(--muted); font-size:0.85rem; margin-bottom:6px; }
+    .excerpt { color:var(--accent); font-size:0.95rem; margin:0; }
+
+    footer{
+      margin-top:20px;
+      color:var(--muted);
+      font-size:0.85rem;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+    }
+
+    /* Responsive: stack thumbnail above content on very small widths */
+    @media (max-width:540px){
+      .post-link { flex-direction:row; gap:12px; }
+      .thumbnail { flex:0 0 56px; width:56px; height:56px; }
+      .avatar { width:72px; height:72px; flex:0 0 72px; }
+      .wrap { padding:18px; }
+    }
+
+    @media (max-width:380px){
+      .post-link { flex-direction:column; align-items:flex-start; }
+      .thumbnail { width:100%; height:160px; flex: 0 0 auto; border-radius:8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap" role="main">
+    <header>
+      <div class="avatar" aria-hidden="false">
+        <!-- AVATAR_URL: replace with your avatar image URL -->
+        <img src="https://github.com/classzheng/classzheng.github.io/blob/main/0_97ca30ca0903ff7d8ab3fe289682282e_1786678711586.jpg?raw=true" alt="avatar of @classzheng" />
+      </div>
+
+      <div class="who">
+        <h1>@classzheng</h1>
+        <p>Student: Applied Mathematics, Coding, Touhou Project, etc.</p>
+      </div>
+    </header>
+
+    <main>
+      <section aria-labelledby="posts-heading">
+        <h2 id="posts-heading">Recent articles</h2>
+
+	<!-- Articles here -->
+        <ul class="posts">
+          <li class="post" aria-label="Article: 手动推导Gödel第一不完备定理">
+            <!-- HREF_ARTICLE_1: the link to the article -->
+            <a class="post-link" href="reader.html?source=https://classzheng.github.io/手动推导Gödel第一不完备定理.html">
+              <div class="thumbnail" aria-hidden="false">
+                <img src="https://github.com/classzheng/Bakaford/blob/main/image/9cdbc2fdfc039245ab477f29c194a4c27d1e253f.jpg?raw=true" alt="Thumbnail" />
+              </div>
+
+              <div class="post-content">
+                <span class="title">手动推导Gödel第一不完备定理</span>
+                <div class="meta">2026-09-06 · 4 min read</div>
+                <p class="excerpt">能在学校里手推Gödel第一不完备定理的我真是闲的9</p>
+              </div>
+            </a>
+          </li>
+
+          <li class="post" aria-label="Article: 用Clifford括号面积法斩碎你的incidence几何命题">
+            <a class="post-link" href="reader.html?source=https://classzheng.github.io/用Clifford括号面积法斩碎你的incidence几何命题.html">
+              <div class="thumbnail" aria-hidden="false">
+                <img src="https://github.com/classzheng/Bakaford/blob/main/image/%E2%91%A8.jpeg?raw=true" alt="Thumbnail" />
+              </div>
+
+              <div class="post-content">
+                <span class="title">用Clifford括号面积法斩碎你的incidence几何命题</span>
+                <div class="meta">2026-08-18 · 12 min read</div>
+                <p class="excerpt">把所有的“我”改成“咱”，因为这样子比较チルノ?</p>
+              </div>
+            </a>
+          </li>
+
+          <li class="post" aria-label="Article: 退治化学方程式的配平">
+            <a class="post-link" href="reader.html?source=https://classzheng.github.io/退治化学方程式的配平.html">
+              <div class="thumbnail" aria-hidden="false">
+                <img src="https://github.com/classzheng/Bakaford/blob/main/image/_cgi-bin_mmwebwx-bin_webwxgetmsgimg__&MsgID=8697340006523741144&skey=@crypt_6577b684_ce63b66d2d24df240e3ab6e1a137be9a&mmweb_appid=wx_webfilehelper.jpg?raw=true" alt="Thumbnail" />
+              </div>
+
+              <div class="post-content">
+                <span class="title">退治化学方程式的配平</span>
+                <div class="meta">2026-07-08 · 15 min read</div>
+                <p class="excerpt">我的悲伤是水做的T^T</p>
+              </div>
+            </a>
+          </li>
+        </ul>
+
+
+
+
+      </section>
+    </main>
+
+    <footer>
+      <div>Made by @classzheng via <a href="https://www.github.com/copilot" style="color:var(--muted); text-decoration:none;">Github Copilot</a></div>
+      <div><a href="PROFILE_LINK" style="color:var(--muted); text-decoration:none;">Profile</a></div>
+    </footer>
+  </div>
+</body>
+</html>
