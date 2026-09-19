@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Reader — @classzheng</title>
+  <link rel="icon" type="image/png" href="https://github.com/classzheng/classzheng.github.io/blob/main/fumo.png?raw=true" />
+  <title id="pageTitle">@classzheng — Blog</title>
   <meta name="description" content="Reader: load an article URL into an iframe using ?source=..." />
 
   <style>
@@ -139,7 +140,8 @@ footer {
       <div class="controls">
         <input id="sourceInput" type="url" placeholder="https://example.com/article.html" aria-label="article url" />
         <button id="loadBtn" type="button">Load</button>
-        <a id="openLink" href="#" target="_blank" rel="noopener noreferrer">Open in new tab</a>
+        <a id="openLink" href="#" target="_blank" rel="noopener noreferrer">Open in new tab</a> / 
+	<a href="https://classzheng.github.io/" style="color:var(--muted); text-decoration:none;">Homepage</a>
       </div>
     </header>
 
@@ -153,7 +155,6 @@ footer {
 
     <footer>
       <div>Made by @classzheng via <a href="https://www.github.com/copilot" style="color:var(--muted); text-decoration:none;">Github Copilot</a></div>
-      <div><a href="index.html" style="color:var(--muted); text-decoration:none;">Back</a></div>
     </footer>
   </div>
 
@@ -194,6 +195,10 @@ footer {
       }
 
       function showViewer(url) {
+  updatePageTitle(url);
+
+  placeholder.style.display = 'none';
+  viewer.style.display = 'block';
         placeholder.style.display = 'none';
         viewer.style.display = 'block';
         // Remove sandbox attribute to maximize compatibility with sites. If you want stronger isolation, do NOT remove sandbox.
@@ -252,8 +257,33 @@ footer {
         if (!href || href === '#') e.preventDefault();
       });
 
+      function updatePageTitle(url) {
+  const titleElement = document.getElementById('pageTitle');
+
+  try {
+    const articleURL = new URL(url, location.href);
+
+    // Extract the filename from the article URL.
+    let articleTitle = decodeURIComponent(
+      articleURL.pathname.split('/').pop() || ''
+    );
+
+    // Remove common article file extensions.
+    articleTitle = articleTitle.replace(/\.(html?|php)$/i, '');
+
+    // Use a fallback if no usable title was found.
+    if (!articleTitle || articleTitle === 'index') {
+      articleTitle = 'Article';
+    }
+
+    document.title = `${articleTitle} — @classzheng`;
+  } catch (error) {
+    document.title = 'Article — @classzheng';
+  }
+}
       // expose for debugging if needed
       window.__reader = { showViewer, showPlaceholder, isValidURL };
+	    
     })();
   </script>
 </body>
